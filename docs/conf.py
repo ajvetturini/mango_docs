@@ -4,13 +4,13 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import  os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+#sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'mango generative design framework'
-copyright = '2024, A.J. Vetturini'
+copyright = '2024'
 author = 'A.J. Vetturini'
 release = 'b0.0.1'
 
