@@ -1,1 +1,0 @@
-.. include:: Tutorial1_mango.rst
