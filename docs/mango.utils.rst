@@ -20,7 +20,7 @@ Design IO
 Math Functions
 ------------------------------
 
-.. automodule:: mango.utils.mango_math
+.. automodule:: mango.utils.math
    :members:
    :undoc-members:
    :show-inheritance:

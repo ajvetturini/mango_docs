@@ -4,7 +4,7 @@ Input design features
 Preserved Regions
 -----------------
 
-.. automodule:: mango.mango_features.preserved_regions
+.. automodule:: mango.features.preserved_regions
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +12,7 @@ Preserved Regions
 Excluded Regions
 ----------------------------------------------
 
-.. automodule:: mango.mango_features.excluded_regions
+.. automodule:: mango.features.excluded_regions
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +20,7 @@ Excluded Regions
 Ramp Element
 ------------------------------------------
 
-.. automodule:: mango.mango_features.grammar_ramp
+.. automodule:: mango.features.grammar_ramp
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +28,7 @@ Ramp Element
 Mesh Face (Not intended as user-facing)
 ---------------------------------------
 
-.. automodule:: mango.mango_features.mesh_face
+.. automodule:: mango.features.mesh_face
    :members:
    :undoc-members:
    :show-inheritance:

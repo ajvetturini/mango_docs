@@ -4,7 +4,7 @@ Optimization problem definition
 Design Constraints
 -------------------------------------------------------
 
-.. automodule:: mango.optimization_features.design_constraints
+.. automodule:: mango.optimizers.design_constraints
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +12,7 @@ Design Constraints
 Objective Function
 -------------------------------------------------------
 
-.. automodule:: mango.optimization_features.objective_function
+.. automodule:: mango.optimizers.objective_function
    :members:
    :undoc-members:
    :show-inheritance:
