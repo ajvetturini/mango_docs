@@ -12,3 +12,4 @@ nbsphinx==0.9.4
 sphinx_rtd_theme==2.0.0
 pymeshfix==0.17.0
 mango @ git+https://github.com/CMU-Integrated-Design-Innovation-Group/Mango@main
+kodak @ git+https://github.com/ajvetturini/kodak_toolkit@main
