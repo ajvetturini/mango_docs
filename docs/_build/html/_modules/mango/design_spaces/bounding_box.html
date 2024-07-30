@@ -84,7 +84,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">plotly.graph_objs</span> <span class="k">as</span> <span class="nn">go</span>
 
 <span class="c1"># Function call use in boxes:</span>
@@ -816,6 +816,7 @@
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Due to computational geometry, we want to ensure the faces of the Parallelepiped are constant so we declare</span>
         <span class="c1"># a constant rotation here going CCW at each face:</span>
+        <span class="c1">#self.faces = [(0, 2, 6, 1), (3, 5, 7, 4), (0, 2, 5, 3), (1, 4, 7, 6), (2, 6, 7, 5), (0, 3, 4, 1)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
 
         <span class="c1"># Update angles to be in rads:</span>
@@ -881,20 +882,23 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
         <span class="n">v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span>
+
         <span class="n">v3x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
-        <span class="n">v3y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">v3y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
         <span class="n">v3z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">v3x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">v3y</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
         <span class="n">v3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">v3x</span><span class="p">,</span> <span class="n">v3y</span><span class="p">,</span> <span class="n">v3z</span><span class="p">])</span>
+
         <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
-                    <span class="n">v1</span><span class="p">,</span>
-                    <span class="n">v2</span><span class="p">,</span>
-                    <span class="n">v3</span><span class="p">,</span>
-                    <span class="n">v1</span> <span class="o">+</span> <span class="n">v3</span><span class="p">,</span>
-                    <span class="n">v2</span> <span class="o">+</span> <span class="n">v3</span><span class="p">,</span>
-                    <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">,</span>
-                    <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span> <span class="o">+</span> <span class="n">v3</span>
-                <span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">v1</span><span class="p">,</span>
+            <span class="n">v2</span><span class="p">,</span>
+            <span class="n">v3</span><span class="p">,</span>
+            <span class="n">v1</span> <span class="o">+</span> <span class="n">v3</span><span class="p">,</span>
+            <span class="n">v2</span> <span class="o">+</span> <span class="n">v3</span><span class="p">,</span>
+            <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">,</span>
+            <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span> <span class="o">+</span> <span class="n">v3</span>
+        <span class="p">]),</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vertices</span></div>
 
 
@@ -909,9 +913,6 @@
         <span class="n">face_equations</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">all_vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_vertices_and_edges</span><span class="p">()</span>
         <span class="c1"># Order of faces matters == LEFT HANDED due to checking for points</span>
-
-        <span class="n">face_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="s1">&#39;yz&#39;</span><span class="p">,</span> <span class="s1">&#39;yz&#39;</span><span class="p">,</span> <span class="s1">&#39;xz&#39;</span><span class="p">,</span> <span class="s1">&#39;xz&#39;</span><span class="p">]</span>  <span class="c1"># Come back to this later, these are the &quot;a b c&quot; plane</span>
-        <span class="c1"># alignments where x==a y==b and z==c</span>
         <span class="k">for</span> <span class="n">face_vertices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">:</span>
             <span class="n">vertices</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">face_vertices</span><span class="p">:</span>
@@ -942,7 +943,7 @@
 <div class="viewcode-block" id="Parallelepiped.intersection_point">
 <a class="viewcode-back" href="../../../mango.design_spaces.html#mango.design_spaces.bounding_box.Parallelepiped.intersection_point">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">intersection_point</span><span class="p">(</span><span class="n">line_start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">line_end</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">abcd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">intersection_point</span><span class="p">(</span><span class="n">line_start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">line_end</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">abcd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the intersection point between a line segment and a plane if it exists.</span>
 
@@ -958,20 +959,22 @@
         <span class="n">sign_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">abcd</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="n">line_start</span><span class="p">)</span> <span class="o">+</span> <span class="n">abcd</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
         <span class="n">sign_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">abcd</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="n">line_end</span><span class="p">)</span> <span class="o">+</span> <span class="n">abcd</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
 
-        <span class="c1"># We ONLY check in the case that we are not checking from a point that lies on a plane. If a point already</span>
-        <span class="c1"># lies on a plane then we presume that we are on the correct side.</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">sign_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">sign_end</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="c1"># Check if the line and the plane are parallel and if so just return &quot;None&quot;</span>
-            <span class="k">if</span> <span class="n">sign</span><span class="p">(</span><span class="n">sign_start</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sign</span><span class="p">(</span><span class="n">sign_end</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">True</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="c1"># If sign_start / sign_end lies on the plane (and equals 0) then False</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">sign_start</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="nb">round</span><span class="p">(</span><span class="n">sign_end</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Check if the line segment intersects the plane</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">sign</span><span class="p">(</span><span class="n">sign_start</span><span class="p">)</span> <span class="o">!=</span> <span class="n">sign</span><span class="p">(</span><span class="n">sign_end</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">sign_start</span><span class="p">,</span> <span class="n">sign_end</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># If not intersecting and neither point is on the plane</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 
 
 <div class="viewcode-block" id="Parallelepiped.edge_intersecting_box">
 <a class="viewcode-back" href="../../../mango.design_spaces.html#mango.design_spaces.bounding_box.Parallelepiped.edge_intersecting_box">[docs]</a>
-    <span class="k">def</span> <span class="nf">edge_intersecting_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">point2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">edge_intersecting_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">point2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines if there is an intersection point between a line segment and a plane in the mesh.</span>
 
@@ -983,7 +986,7 @@
         <span class="c1"># Check if a point lies inside the parallelepiped by checking if it lies on the positive side of all faces</span>
         <span class="k">for</span> <span class="n">abcd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">face_equations</span><span class="p">:</span>
             <span class="c1"># Check if the line segment intersects the face:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection_point</span><span class="p">(</span><span class="n">point1</span><span class="p">,</span> <span class="n">point2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">abcd</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection_point</span><span class="p">(</span><span class="n">point1</span><span class="p">,</span> <span class="n">point2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">abcd</span><span class="p">),</span> <span class="n">threshold</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">True</span>
 
         <span class="c1"># Otherwise return False meaning &quot;edge not intersecting&quot;</span>

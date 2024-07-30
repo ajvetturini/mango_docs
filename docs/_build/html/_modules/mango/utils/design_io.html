@@ -85,18 +85,18 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">trimesh.exchange.ply</span> <span class="kn">import</span> <span class="n">export_ply</span>
 <span class="kn">from</span> <span class="nn">trimesh.exchange.obj</span> <span class="kn">import</span> <span class="n">export_obj</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">mango.utils.DNA_property_constants</span> <span class="kn">import</span> <span class="n">BDNA</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">dill</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">signal</span>
 
 <div class="viewcode-block" id="export_design_to_ply">
 <a class="viewcode-back" href="../../../mango.utils.html#mango.utils.design_io.export_design_to_ply">[docs]</a>
 <span class="k">def</span> <span class="nf">export_design_to_ply</span><span class="p">(</span><span class="n">design</span><span class="p">:</span> <span class="n">PolyhedralSpace</span><span class="p">,</span> <span class="n">savepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">savename_no_extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    NOT INTENDED FOR END USER USE. PLEASE SEE export_DNA_design for the user-facing function</span>
-
 <span class="sd">    This function exports a given PolyhedralSpace to a .ply file for the use in a automated scaffold routing algorithm</span>
 
 <span class="sd">    :param design: PolyhedralSpace design space that is to be converted to a PLY file</span>
@@ -125,8 +125,6 @@
 <a class="viewcode-back" href="../../../mango.utils.html#mango.utils.design_io.export_design_to_obj">[docs]</a>
 <span class="k">def</span> <span class="nf">export_design_to_obj</span><span class="p">(</span><span class="n">design</span><span class="p">:</span> <span class="n">PolyhedralSpace</span><span class="p">,</span> <span class="n">savepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">savename_no_extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    NOT INTENDED FOR END USER USE. PLEASE SEE export_DNA_design for the user-facing function</span>
-
 <span class="sd">    This function exports a given PolyhedralSpace to a .obj file for the use in a automated scaffold routing algorithm</span>
 
 <span class="sd">    :param design: PolyhedralSpace design space that is to be converted to a obj file</span>
@@ -152,9 +150,7 @@
 
 
 
-<div class="viewcode-block" id="all_same">
-<a class="viewcode-back" href="../../../mango.utils.html#mango.utils.design_io.all_same">[docs]</a>
-<span class="k">def</span> <span class="nf">all_same</span><span class="p">(</span><span class="n">strings</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_all_same</span><span class="p">(</span><span class="n">strings</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Simple function to verify that the filename is unique when doing a mass export &quot;&quot;&quot;</span>
     <span class="c1"># Check if the list is empty</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">strings</span><span class="p">:</span>
@@ -169,13 +165,10 @@
             <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># If all strings are the same, return True</span>
-    <span class="k">return</span> <span class="kc">True</span></div>
+    <span class="k">return</span> <span class="kc">True</span>
 
 
-
-<div class="viewcode-block" id="export_list_of_designs_to_ply">
-<a class="viewcode-back" href="../../../mango.utils.html#mango.utils.design_io.export_list_of_designs_to_ply">[docs]</a>
-<span class="k">def</span> <span class="nf">export_list_of_designs_to_ply</span><span class="p">(</span><span class="n">design_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">savepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">list_of_savenames_no_extensions</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_export_list_of_designs_to_ply</span><span class="p">(</span><span class="n">design_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">savepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">list_of_savenames_no_extensions</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    NOT INTENDED FOR END USER USE. PLEASE SEE mass_design_export for the user-facing function</span>
 
@@ -187,24 +180,23 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">design_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_of_savenames_no_extensions</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Lengths of lists do NOT match -&gt; Can NOT export&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">all_same</span><span class="p">(</span><span class="n">list_of_savenames_no_extensions</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">_all_same</span><span class="p">(</span><span class="n">list_of_savenames_no_extensions</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Duplicate savenames found -&gt; Can NOT export&#39;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">design</span><span class="p">,</span> <span class="n">savename</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">design_list</span><span class="p">,</span> <span class="n">list_of_savenames_no_extensions</span><span class="p">):</span>
         <span class="n">export_design_to_ply</span><span class="p">(</span><span class="n">design</span><span class="o">=</span><span class="n">design</span><span class="p">,</span>
-                             <span class="n">savepath</span><span class="o">=</span><span class="n">savepath</span><span class="p">,</span>
-                             <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename</span><span class="p">)</span></div>
-
+                              <span class="n">savepath</span><span class="o">=</span><span class="n">savepath</span><span class="p">,</span>
+                              <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="export_DNA_design">
 <a class="viewcode-back" href="../../../mango.utils.html#mango.utils.design_io.export_DNA_design">[docs]</a>
 <span class="k">def</span> <span class="nf">export_DNA_design</span><span class="p">(</span><span class="n">automated_scaffold_executable_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">design</span><span class="p">:</span> <span class="n">PolyhedralSpace</span><span class="p">,</span> <span class="n">export_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                       <span class="n">savename_no_extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">DNA_geometry</span><span class="o">=</span><span class="n">BDNA</span><span class="p">,</span> <span class="n">scaffold_sequence_filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                      <span class="n">ply_or_obj</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;ply&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+                      <span class="n">ply_or_obj</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;ply&#39;</span><span class="p">,</span> <span class="n">automated_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;DAEDALUS&#39;</span><span class="p">,</span> <span class="n">vHelix_sim_time</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This is the top level function a user should call which will export a single design. The export_design_to_ply</span>
-<span class="sd">    is called by this function.</span>
+<span class="sd">    This is the top level function a user should call which will export a single design using the ATHENA algorithms</span>
+<span class="sd">    (i.e., DAEDALUS or TALOS). The export_design_to_ply is called by this function.</span>
 
 <span class="sd">    :param design: PolyhedralSpace design space that is to be converted to a PLY file</span>
 <span class="sd">    :param automated_scaffold_executable_path: Filepath to automated algorithm (e.g. DAEDALUS2.exe path)</span>
@@ -213,40 +205,69 @@
 <span class="sd">    :param DNA_geometry: Do not change</span>
 <span class="sd">    :param scaffold_sequence_filepath: Path to sequence file to use, default is M13</span>
 <span class="sd">    :param ply_or_obj: Ply will export a PLY file, obj will export an OBJ file</span>
+<span class="sd">    :param vHelix_sim_time: If using vHelix, this controls how long the sim time should go for. Generally, I would not</span>
+<span class="sd">                            recommend using any higher than zero and fine-tune the design after the generative process.</span>
+<span class="sd">                            If you opt to use this simulation during the generative process, be prepared for very</span>
+<span class="sd">                            lengthy processes (i.e., ~day(s) depending on optimizer hyperparameters).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># First we need the minimal edge length in the design:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">design</span> <span class="o">=</span> <span class="n">design</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">all_edges</span> <span class="o">=</span> <span class="n">calculate_design_edge_lengths</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">design</span><span class="o">.</span><span class="n">design_graph</span><span class="p">)</span>
     <span class="n">min_edge_length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_edges</span><span class="p">)</span>  <span class="c1"># min(all_edges) is in units of nm, need nucleobases:</span>
     <span class="n">min_edge_length_nb</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_edge_length</span> <span class="o">/</span> <span class="n">DNA_geometry</span><span class="o">.</span><span class="n">pitch_per_rise</span><span class="p">)</span>
     <span class="c1"># With the min_edge_length found, we can create a PLY file in the specified path:</span>
     <span class="k">if</span> <span class="n">ply_or_obj</span> <span class="o">==</span> <span class="s1">&#39;ply&#39;</span><span class="p">:</span>
         <span class="n">ply_path</span> <span class="o">=</span> <span class="n">export_design_to_ply</span><span class="p">(</span><span class="n">design</span><span class="o">=</span><span class="n">design</span><span class="p">,</span> <span class="n">savepath</span><span class="o">=</span><span class="n">export_path</span><span class="p">,</span>
-                                        <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename_no_extension</span><span class="p">)</span>
+                                         <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename_no_extension</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ply_path</span> <span class="o">=</span> <span class="n">export_design_to_obj</span><span class="p">(</span><span class="n">design</span><span class="o">=</span><span class="n">design</span><span class="p">,</span> <span class="n">savepath</span><span class="o">=</span><span class="n">export_path</span><span class="p">,</span>
-                                        <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename_no_extension</span><span class="p">)</span>
+                                         <span class="n">savename_no_extension</span><span class="o">=</span><span class="n">savename_no_extension</span><span class="p">)</span>
     <span class="c1"># Then we will call the automated algorithm.</span>
     <span class="c1">## First check if user specified a sequence to use:</span>
-    <span class="n">SEQ_PATH</span> <span class="o">=</span> <span class="s1">&#39;./M13.txt&#39;</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">SEQ_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;M13.txt&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scaffold_sequence_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">SEQ_PATH</span> <span class="o">=</span> <span class="n">scaffold_sequence_filepath</span>
-    <span class="k">if</span> <span class="s1">&#39;DAEDALUS&#39;</span> <span class="ow">in</span> <span class="n">automated_scaffold_executable_path</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;DAEDALUS&#39;</span><span class="p">:</span>
         <span class="c1">#command = f&quot;{automated_scaffold_executable_path} {export_path} {ply_path} {SEQ_PATH} 1 2 0 {min_edge_length_nb} 0.0 m &gt; output.log 2&gt;&amp;1&quot;</span>
         <span class="c1">## NOTE TO SELF: 1 2 1 is outputting the correct scale in design... interesting, 0 is scaling up. FORTRAN code</span>
         <span class="c1">## is a bit rather non-obvious as to why this scales up, but these designs simulated look good</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">automated_scaffold_executable_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">export_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ply_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">SEQ_PATH</span><span class="si">}</span><span class="s2"> 1 2 1 </span><span class="si">{</span><span class="n">min_edge_length_nb</span><span class="si">}</span><span class="s2"> 0.0 m &gt; output.log 2&gt;&amp;1&quot;</span>
-    <span class="k">elif</span> <span class="s1">&#39;TALOS&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">automated_scaffold_executable_path</span><span class="p">:</span>
-        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">automated_scaffold_executable_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">export_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ply_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">SEQ_PATH</span><span class="si">}</span><span class="s2"> 3 2 0 </span><span class="si">{</span><span class="n">min_edge_length_nb</span><span class="si">}</span><span class="s2"> 0.0 m &gt; output.log 2&gt;&amp;1&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Only DAEDALUS and TALOS are supported for the executable path.&#39;</span><span class="p">)</span>
-    <span class="c1"># Run:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
-        <span class="k">pass</span>
-    <span class="c1"># We return this value although most of the time it isn&#39;t really needed, just useful for mass export:</span>
-    <span class="k">return</span> <span class="n">min_edge_length_nb</span></div>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">automated_scaffold_executable_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">export_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ply_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">SEQ_PATH</span><span class="si">}</span><span class="s2"> 1 2 1 </span><span class="si">{</span><span class="n">min_edge_length_nb</span><span class="si">}</span><span class="s2"> 0.0 m&quot;</span>
 
+
+    <span class="k">elif</span> <span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;TALOS&#39;</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">automated_scaffold_executable_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">export_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ply_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">SEQ_PATH</span><span class="si">}</span><span class="s2"> 3 2 1 </span><span class="si">{</span><span class="n">min_edge_length_nb</span><span class="si">}</span><span class="s2"> 0.0 m&quot;</span>
+
+    <span class="k">elif</span> <span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;vHelix&#39;</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">automated_scaffold_executable_path</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ply_path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Only DAEDALUS, TALOS are currently supported for the executable path.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">automated_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;DAEDALUS&#39;</span><span class="p">,</span> <span class="s1">&#39;TALOS&#39;</span><span class="p">]:</span>
+        <span class="c1"># Run ATHENA algorithm</span>
+        <span class="n">process_run_successfully</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">)</span>
+            <span class="c1"># If the automated_name is vHelix we really just want to end it &quot;immediately&quot; of sorts</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="n">process_run_successfully</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># We return this value although most of the time it isn&#39;t really needed, just useful for mass export:</span>
+        <span class="k">return</span> <span class="n">min_edge_length_nb</span><span class="p">,</span> <span class="n">process_run_successfully</span>
+
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Run vHelix by setting WD first:</span>
+        <span class="n">process_run_successfully</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">wd</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">automated_algorithm_software</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">wd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">)</span>
+
+        <span class="c1"># We return this value although most of the time it isn&#39;t really needed, just useful for mass export:</span>
+        <span class="k">return</span> <span class="n">min_edge_length_nb</span><span class="p">,</span> <span class="n">process_run_successfully</span></div>
 
 
 <div class="viewcode-block" id="mass_design_export">

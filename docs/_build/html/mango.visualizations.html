@@ -478,7 +478,7 @@ generated design</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mango.visualizations.mango_output_visualization.VisualizationObject.create_standard_output_single_objective">
-<span class="sig-name descname"><span class="pre">create_standard_output_single_objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_or_cylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cylinder'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/mango/visualizations/mango_output_visualization.html#VisualizationObject.create_standard_output_single_objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mango.visualizations.mango_output_visualization.VisualizationObject.create_standard_output_single_objective" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">create_standard_output_single_objective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_or_cylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cylinder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_box</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/mango/visualizations/mango_output_visualization.html#VisualizationObject.create_standard_output_single_objective"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mango.visualizations.mango_output_visualization.VisualizationObject.create_standard_output_single_objective" title="Link to this definition"></a></dt>
 <dd><dl class="simple">
 <dt>This function will create the standard output windows for a single objective optimization process consisting of:</dt><dd><ul class="simple">
 <li><p>The objective function valuation over the number of epochs which is interactive and a user can select
@@ -489,8 +489,11 @@ from this list</p></li>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mesh_or_cylinder</strong> – Values are either “mesh” or “cylinder” and change the visual appearance of the
-generated design</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>show_box</strong> – Shows the bounding box in the visualized elements</p></li>
+<li><p><strong>mesh_or_cylinder</strong> – Values are either “mesh” or “cylinder” and change the visual appearance of the
+generated design</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

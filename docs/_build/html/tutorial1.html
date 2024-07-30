@@ -109,10 +109,8 @@ during the generative process. The excluded regions are optional, but
 prevent DNA from being added to these areas (e.g., a nanoparticle)</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import the required packages:</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mango.design_spaces.bounding_box</span> <span class="kn">import</span> <span class="n">CubicBox</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.preserved_regions</span> <span class="kn">import</span> <span class="n">PreservedEdge</span><span class="p">,</span> <span class="n">PreservedVertex</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.excluded_regions</span> <span class="kn">import</span> <span class="n">Sphere</span>
-<span class="kn">from</span> <span class="nn">mango.design_spaces.polyhedral_design_space</span> <span class="kn">import</span> <span class="n">PolyhedralSpace</span>
+<span class="kn">from</span> <span class="nn">mango.design_spaces</span> <span class="kn">import</span> <span class="n">PolyhedralSpace</span><span class="p">,</span> <span class="n">CubicBox</span>
+<span class="kn">from</span> <span class="nn">mango.features</span> <span class="kn">import</span> <span class="n">PreservedEdge</span><span class="p">,</span> <span class="n">PreservedVertex</span><span class="p">,</span> <span class="n">Sphere</span>
 
 <span class="c1"># Define a box that is a constant 50 x 50 x 50 nm:</span>
 <span class="n">new_box</span> <span class="o">=</span> <span class="n">CubicBox</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
@@ -155,7 +153,7 @@ simplistic example and has no physical meaning</p>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
 <span class="c1"># Import mango utilities:</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="n">xyz_from_graph</span><span class="p">,</span> <span class="n">length_and_direction_between_nodes</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="n">xyz_from_graph</span><span class="p">,</span> <span class="n">length_and_direction_between_nodes</span>
 
 <span class="c1"># We start by defining a function which takes in two values: input_vars and extra_params</span>
 <span class="c1"># The value of input_vars is essentially re-calculated every design iteration, and the design_graph</span>
@@ -217,17 +215,17 @@ simplistic example and has no physical meaning</p>
 </pre></div>
 </div>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import design constraint features and assign:</span>
-<span class="kn">from</span> <span class="nn">mango.optimization_features</span> <span class="kn">import</span> <span class="n">design_constraints</span>
+<span class="kn">from</span> <span class="nn">mango.optimizers</span> <span class="kn">import</span> <span class="n">CustomDesignConstraint</span><span class="p">,</span> <span class="n">PolyhedralDefaultConstraints</span>
 
 <span class="c1"># We define the custom constraint simple as:</span>
-<span class="n">custom_constraint</span> <span class="o">=</span> <span class="n">design_constraints</span><span class="o">.</span><span class="n">CustomDesignConstraint</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cutoff Distance Constraint&#39;</span><span class="p">,</span>
-                                                              <span class="n">design_constraint</span><span class="o">=</span><span class="n">edge_cutoff_constraint</span><span class="p">,</span>
-                                                              <span class="n">extra_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;threshold&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="c1"># units nm</span>
-                                                                            <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="mf">3.75</span><span class="p">})</span>
+<span class="n">custom_constraint</span> <span class="o">=</span> <span class="n">CustomDesignConstraint</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Cutoff Distance Constraint&#39;</span><span class="p">,</span>
+                                           <span class="n">design_constraint</span><span class="o">=</span><span class="n">edge_cutoff_constraint</span><span class="p">,</span>
+                                           <span class="n">extra_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;threshold&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="c1"># units nm</span>
+                                                         <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="mf">3.75</span><span class="p">})</span>
 <span class="c1"># NOTE: edge_cutoff_constraint must be written as is, do not use edge_cutoff_constraint()</span>
 
 <span class="c1"># Now we set up the default constraints and re-assign the min face and edge length:</span>
-<span class="n">constraints</span> <span class="o">=</span> <span class="n">design_constraints</span><span class="o">.</span><span class="n">PolyhedralDefaultConstraints</span><span class="p">(</span>
+<span class="n">constraints</span> <span class="o">=</span> <span class="n">PolyhedralDefaultConstraints</span><span class="p">(</span>
         <span class="n">min_face_angle</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
         <span class="n">min_edge_length</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>  <span class="c1"># 42 basepairs for min length</span>
         <span class="n">max_number_basepairs_in_scaffold</span><span class="o">=</span><span class="mi">7249</span><span class="p">,</span>
@@ -245,7 +243,8 @@ custom objective to be minimized. I am working on implementing the
 maximizer code (if there is enough request), but also as a general note:
 you can transform a maximization problem -&gt; minimization problem by
 taking the inverse of the maximizing function.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mango.optimization_features.objective_function</span> <span class="kn">import</span> <span class="n">ObjectiveFunction</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mango.optimizers</span> <span class="kn">import</span> <span class="n">ObjectiveFunction</span>
+
 <span class="c1"># Function to estimate the volume of a cylinder-representing-DNA</span>
 <span class="k">def</span> <span class="nf">cylinder_volume</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">dna_diameter</span><span class="p">):</span>
     <span class="n">total_volume</span> <span class="o">=</span> <span class="mf">0.</span>
@@ -284,7 +283,7 @@ optimizing) a design with the currently developed grammars will likely
 not be efficient.</p>
 <p>I recommend starting simple and slowly “ramping up” the hyperparameters
 to find a sweet spot of computation time and results analysis</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mango.optimizers.single_objective_shape_annealing</span> <span class="kn">import</span> <span class="n">ShapeAnneal</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mango.optimizers</span> <span class="kn">import</span> <span class="n">ShapeAnneal</span>
 <span class="kn">from</span> <span class="nn">mango.grammars.origami_grammars</span> <span class="kn">import</span> <span class="n">TriangulationGrammars</span>
 
 <span class="n">opt</span> <span class="o">=</span> <span class="n">ShapeAnneal</span><span class="p">(</span>

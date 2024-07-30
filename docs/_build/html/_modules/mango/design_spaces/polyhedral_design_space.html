@@ -81,19 +81,23 @@
 <span class="sd">This is the top level class responsible for maintaining the design features / qualities of a given design. This is</span>
 <span class="sd">effectively an environment from which we are applying grammars (actions) to.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="c1"># Import Modules</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">.bounding_box</span> <span class="kn">import</span> <span class="n">TriclinicBox</span><span class="p">,</span> <span class="n">MonoclinicBox</span><span class="p">,</span> <span class="n">OrthorhombicBox</span><span class="p">,</span> <span class="n">TetragonalBox</span><span class="p">,</span> <span class="n">RhombohedralBox</span><span class="p">,</span> <span class="n">HexagonalBox</span><span class="p">,</span> <span class="n">CubicBox</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.preserved_regions</span> <span class="kn">import</span> <span class="n">PreservedEdge</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.mesh_face</span> <span class="kn">import</span> <span class="n">MeshFace</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mango.features.preserved_regions</span> <span class="kn">import</span> <span class="n">PreservedEdge</span>
+<span class="kn">from</span> <span class="nn">mango.features.mesh_face</span> <span class="kn">import</span> <span class="n">MeshFace</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">trimesh</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
 <span class="kn">from</span> <span class="nn">mango.utils.DNA_property_constants</span> <span class="kn">import</span> <span class="n">BDNA</span>
 <span class="kn">import</span> <span class="nn">pyvista</span> <span class="k">as</span> <span class="nn">pv</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">scadnano</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">Delaunay</span>
 
 <div class="viewcode-block" id="PolyhedralSpace">
 <a class="viewcode-back" href="../../../mango.design_spaces.html#mango.design_spaces.polyhedral_design_space.PolyhedralSpace">[docs]</a>
@@ -107,12 +111,28 @@
 <span class="sd">    ------------</span>
 <span class="sd">    bounding_box : BoundingBox data type, created</span>
 <span class="sd">    preserved : List of PreservedVertex or PreservedEdge objects</span>
-<span class="sd">    excluded: An optional list of Sphere or RectangularPrism objects</span>
+<span class="sd">    excluded : An optional list of Sphere or RectangularPrism objects</span>
+<span class="sd">    use_precise_geometry : A feature that enables nucleotide-level information to be observed during the generative</span>
+<span class="sd">                           process. However, this features adds a much higher computational cost and leads to much</span>
+<span class="sd">                           lengthier studies.</span>
+<span class="sd">    temp_geometry_path : A path to temporarily store files during the generative process in the precise_geometry mode.</span>
+<span class="sd">                         The user must have write access to this directory. This must be specified if</span>
+<span class="sd">                         use_precise_geometry is set to True</span>
+<span class="sd">    automated_algorithm_software : A path leading to an automated algorithm of choice, however the only supported</span>
+<span class="sd">                                   arguments are currently: DAEDALUS2, TALOS, vHelix-BSCOR. It is highly suggested to</span>
+<span class="sd">                                   use an ABSOLUTE path (e.g., C:/user/username/Desktop/DAEDALUS2.exe) instead of a</span>
+<span class="sd">                                   RELATIVE path (e.g. &#39;./output2&#39;).</span>
+<span class="sd">    sequence_file : A path to a sequence file (.txt) which dictates the scaffold sequence to use in a design.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">bounding_box</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriclinicBox</span><span class="p">,</span> <span class="n">MonoclinicBox</span><span class="p">,</span> <span class="n">OrthorhombicBox</span><span class="p">,</span> <span class="n">TetragonalBox</span><span class="p">,</span>
                         <span class="n">RhombohedralBox</span><span class="p">,</span> <span class="n">HexagonalBox</span><span class="p">,</span> <span class="n">CubicBox</span><span class="p">]</span>
     <span class="n">preserved</span><span class="p">:</span> <span class="nb">list</span>
     <span class="n">excluded</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span>
+    <span class="n">use_precise_geometry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">temp_geometry_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">automated_algorithm_software</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">automated_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sequence_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">design_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">()</span>  <span class="c1"># Initialize this to an empty graph</span>
@@ -125,6 +145,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">node_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c1"># This graph is used for the merge face grammar to guarantee that we can back out of certain topologies</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">merge_label_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+
+        <span class="c1"># Validate the use of precise_geometry:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_precise_geometry</span><span class="p">:</span>
+            <span class="c1"># Check if we can write to temp_geometry_path and warn user that this process will take longer to run.</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ERROR: User must specify the temp_geometry_path if using &#39;</span>
+                                                         <span class="s1">&#39;the precise geometry mode.&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_algorithm_software</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;ERROR: User must specify the automated_algorithm_&#39;</span>
+                                                                   <span class="s1">&#39;software if using the precise geometry mode.&#39;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;DAEDALUS&#39;</span><span class="p">,</span> <span class="s1">&#39;TALOS&#39;</span><span class="p">,</span> <span class="s1">&#39;vHelix&#39;</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;ERROR: The automated_name only currently &#39;</span>
+                                                                            <span class="s1">&#39;supports: DAEDALUS, TALOS, and vHelix.&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Precise geometry mode has been enabled. As a warning, this mode takes considerably &#39;</span>
+                          <span class="s1">&#39;longer to validate geometry and will lead to lengthier studies.&#39;</span><span class="p">)</span>
+            <span class="c1"># Add an extra &quot;temp&quot; folder:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;vHelix&#39;</span><span class="p">:</span>
+                <span class="c1"># In vHelix we set the temporary path to a temporary folder in the location of bscor.bat</span>
+                <span class="n">fpath</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_algorithm_software</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;.mango_temp_files&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="s1">&#39;.mango_temp_files&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating temporary directory.&#39;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># init this variable to use as we update the design space.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Temporary directory already exists, continuing.&#39;</span><span class="p">)</span>
+
 
         <span class="c1"># Create the preserved regions by adding them to the design_graph:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">create_preserved_regions</span><span class="p">()</span>
@@ -216,6 +262,7 @@
 <span class="sd">        :return: (bool, list) : the bool returns if the shape is valid (true) or not (false) and the list contains</span>
 <span class="sd">                                the list returns a list of tuples defining the graph nodes of the preserved regions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reassigned</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">Trimesh</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">pv</span><span class="o">.</span><span class="n">PolyData</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;An alphashape could not be generated for the provided input criterion and the optimization&quot;</span>
                             <span class="s2">&quot; process could not begin.&quot;</span><span class="p">)</span>
@@ -223,11 +270,22 @@
         <span class="n">tris</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">:]</span>
         <span class="c1"># First we do a simple check to validate a mesh was triangulated:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tris</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># If there are less than 4 triangles there is no way a 3D surface mesh is formed properly</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tris</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">tri</span> <span class="o">=</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">og_verts</span><span class="p">)</span>
+                <span class="n">verts</span><span class="p">,</span> <span class="n">tris</span> <span class="o">=</span> <span class="n">tri</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">tri</span><span class="o">.</span><span class="n">convex_hull</span>
+                <span class="n">reassigned</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Set flag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># If there are less than 4 triangles there is no way a 3D surface mesh is formed properly</span>
 
         <span class="c1"># First check if number of verices in mesh matches number of vertices passed in:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">verts</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">og_verts</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># If we do not have the same number of points, then this mesh does not contain the input info</span>
+            <span class="c1"># Test if the issue is with pyvista (I have experienced this):</span>
+            <span class="n">tri</span> <span class="o">=</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">og_verts</span><span class="p">)</span>
+            <span class="n">verts</span><span class="p">,</span> <span class="n">tris</span> <span class="o">=</span> <span class="n">tri</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">tri</span><span class="o">.</span><span class="n">convex_hull</span>
+            <span class="n">reassigned</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Set flag</span>
+            <span class="c1">#if len(verts) != len(og_verts):</span>
+            <span class="c1">#    return True, -1  # If we do not have the same number of points, then mesh does not contain the input</span>
+
 
         <span class="c1"># Now we must create a &quot;map&quot; of shape vertices. We do this because the delaunay triangulation might &quot;move&quot; the</span>
         <span class="c1"># indexed vertices around and so we want to validate we are checking the correct vertices:</span>
@@ -254,8 +312,12 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_found</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># If we could not find a preserved edge we return True to re-arrange the mesh w new alpha</span>
 
-        <span class="c1"># Otherwise, if we make it here, return False signalling &quot;mesh passed checks, stop searching&quot;</span>
-        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">new_preserved_edges</span></div>
+        <span class="k">if</span> <span class="n">reassigned</span><span class="p">:</span>
+            <span class="c1"># If the mesh was reassigned we must pass back the proper verts and faces to store:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="p">(</span><span class="n">verts</span><span class="p">,</span> <span class="n">tris</span><span class="p">,</span> <span class="n">new_preserved_edges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise, if we make it here, return False signalling &quot;mesh passed checks, stop searching&quot;</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">new_preserved_edges</span></div>
 
 
 
@@ -291,6 +353,7 @@
         <span class="n">keep_searching</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">initial_alpha</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="n">surface_mesh</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Init to get rid of annoying warning!</span>
+        <span class="n">use_mesh</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">while</span> <span class="n">keep_searching</span><span class="p">:</span>
             <span class="n">curSurf</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">delaunay_3d</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">initial_alpha</span><span class="p">)</span>  <span class="c1"># Note: reconstruct_surface() did not seem to work very well!</span>
             <span class="n">surface_mesh</span> <span class="o">=</span> <span class="n">curSurf</span><span class="o">.</span><span class="n">extract_surface</span><span class="p">()</span>
@@ -299,17 +362,30 @@
                                                                   <span class="n">og_verts</span><span class="o">=</span><span class="n">vert_list</span><span class="p">)</span>
             <span class="c1"># If keep_searching is returned False then we update the terminal_edges:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_searching</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">terminal_edges</span> <span class="o">=</span> <span class="n">new_edges</span>
+                <span class="c1">#self.terminal_edges = new_edges</span>
+                <span class="k">break</span>
+
+            <span class="k">elif</span> <span class="n">keep_searching</span> <span class="ow">and</span> <span class="n">new_edges</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># This is the case for when re-assigning the space:</span>
+                <span class="n">verts</span><span class="p">,</span> <span class="n">tris</span><span class="p">,</span> <span class="n">terminal_edges</span> <span class="o">=</span> <span class="n">new_edges</span>
+                <span class="n">use_mesh</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="c1">#self.terminal_edges = terminal_edges</span>
+                <span class="k">break</span>
+
             <span class="n">initial_alpha</span> <span class="o">+=</span> <span class="mf">0.1</span>
 
             <span class="c1"># Now we have a condition to check based on intiial_alpha:</span>
             <span class="k">if</span> <span class="n">initial_alpha</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Unable to find a valid start condition for your input conditions, please reach out&#39;</span>
-                                <span class="s1">&#39;to the developers to find a solution to your input case.&#39;</span><span class="p">)</span>
+                <span class="n">use_mesh</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR DELETE ME AND UNCOMMENT BELOW AND REMOVE USE_MESH&quot;</span><span class="p">)</span>
+
+                <span class="c1">#raise Exception(&#39;Unable to find a valid start condition for your input conditions, please reach out&#39;</span>
+                <span class="c1">#                &#39;to the developers to find a solution to your input case.&#39;)</span>
 
         <span class="c1"># After finding the correct surface_mesh:</span>
-        <span class="n">verts</span> <span class="o">=</span> <span class="n">surface_mesh</span><span class="o">.</span><span class="n">points</span>
-        <span class="n">tris</span> <span class="o">=</span> <span class="n">surface_mesh</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">use_mesh</span><span class="p">:</span>
+            <span class="n">verts</span> <span class="o">=</span> <span class="n">surface_mesh</span><span class="o">.</span><span class="n">points</span>
+            <span class="n">tris</span> <span class="o">=</span> <span class="n">surface_mesh</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
         <span class="k">return</span> <span class="n">tris</span><span class="p">,</span> <span class="n">verts</span></div>
 
@@ -411,6 +487,127 @@
 
 
 
+<div class="viewcode-block" id="PolyhedralSpace.create_precise_files">
+<a class="viewcode-back" href="../../../mango.design_spaces.html#mango.design_spaces.polyhedral_design_space.PolyhedralSpace.create_precise_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_precise_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is used in precise mode to create a caDNAno design file which can be used for nucleotide</span>
+<span class="sd">        level design analysis in the creation of objective function. This feature is supported by the development of</span>
+<span class="sd">        scadnano which provides an elegant scriptable interface for DNA origami nanostructures.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># First delete the active design file in the temp directory (if it exists) to ensure compatibility:</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>  <span class="c1"># caDNAno file from ATHENA</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.rpoly&#39;</span><span class="p">):</span>  <span class="c1"># vHelix file</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+
+        <span class="c1"># Based on the supported software we call the proper function:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;DAEDALUS&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_daedalus_talos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;TALOS&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_daedalus_talos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span> <span class="o">==</span> <span class="s1">&#39;vHelix&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_vhelix</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Precise mode is only currently supported for the DAEDALUS, TALOS, and vHelix-BSCOR&#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;algorithms. The selected algorithm should define the &quot;automated_name&quot; parameter. You &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;specified: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_apply_daedalus_talos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This function applies the DAEDALUS or TALOS algorithm and moves the required files around so as to not take</span>
+<span class="sd">        up too much space on a computers hard drive. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mango.utils.design_io</span> <span class="kn">import</span> <span class="n">export_DNA_design</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">run_successfully</span> <span class="o">=</span> <span class="n">export_DNA_design</span><span class="p">(</span><span class="n">automated_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                                    <span class="n">automated_scaffold_executable_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_algorithm_software</span><span class="p">,</span>
+                                                    <span class="n">design</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                                    <span class="n">export_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span>
+                                                    <span class="n">savename_no_extension</span><span class="o">=</span><span class="s1">&#39;TEMP_design_mango&#39;</span>
+                                                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">run_successfully</span> <span class="o">=</span> <span class="n">export_DNA_design</span><span class="p">(</span><span class="n">automated_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                                    <span class="n">automated_scaffold_executable_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_algorithm_software</span><span class="p">,</span>
+                                                    <span class="n">design</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                                    <span class="n">export_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span>
+                                                    <span class="n">savename_no_extension</span><span class="o">=</span><span class="s1">&#39;TEMP_design_mango&#39;</span><span class="p">,</span>
+                                                    <span class="n">scaffold_sequence_filepath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sequence_file</span>
+                                                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">run_successfully</span><span class="p">:</span>
+            <span class="n">directory</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_precise_folders</span><span class="p">()</span>
+            <span class="c1"># Open the design via scadnano and reassign the design information so user can access this when designing</span>
+            <span class="c1"># an objective function / design constraint:</span>
+            <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">return</span>
+            <span class="c1"># If the design_path is set then we open the file:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">Design</span><span class="o">.</span><span class="n">from_cadnano_v2</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">sc</span><span class="o">.</span><span class="n">StrandError</span><span class="p">:</span>
+                <span class="c1"># I am unsure what the StrandError is, but we define an invalid shape in this case.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_apply_vhelix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This function applies the vHelix algorithm and moves the required files around so as to not take up</span>
+<span class="sd">                too much space on a computers hard drive. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">mango.utils.design_io</span> <span class="kn">import</span> <span class="n">export_DNA_design</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">export_DNA_design</span><span class="p">(</span><span class="n">automated_name</span><span class="o">=</span><span class="s1">&#39;vHelix&#39;</span><span class="p">,</span>
+                                                <span class="n">automated_scaffold_executable_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">automated_algorithm_software</span><span class="p">,</span>
+                                                <span class="n">design</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                                <span class="n">export_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span>
+                                                <span class="n">savename_no_extension</span><span class="o">=</span><span class="s1">&#39;TEMP_design_mango&#39;</span>
+                                                <span class="p">)</span>
+        <span class="c1"># After applying we cleanup the directory quickly:</span>
+        <span class="n">run_successfully</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">rpoly_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.rpoly&#39;</span><span class="p">):</span>
+                <span class="n">run_successfully</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">rpoly_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+
+        <span class="c1"># If an rpoly file wasn&#39;t created then there was an error and therefore we set &quot;None&quot; to signal invalid design</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">run_successfully</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Otherwise we set the nucleotide_level_design to be simply the filepath to the rpoly file for processing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nucleotide_level_design</span> <span class="o">=</span> <span class="n">rpoly_path</span>
+
+
+    <span class="k">def</span> <span class="nf">_clean_precise_folders</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This function cleans up the temporary directory created during precise_mode such that only the required</span>
+<span class="sd">        information is kept to be mindful of memory requirements:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">directory</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1"># First we grab whatever the current directory created is (this will be the only folder in this directory):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">)</span>
+        <span class="n">cur_folder</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">i</span><span class="p">))]</span>
+
+        <span class="c1"># Move the JSON file to the top level temp folderpath:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cur_folder</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If no file was created (i.e., invalid design into automated software) we just return None to signal this</span>
+            <span class="k">return</span> <span class="n">directory</span><span class="p">,</span> <span class="n">path</span>
+        <span class="n">tpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">cur_folder</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tpath</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;.json&#39;</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="c1"># Once we find the JSON file, we simply mover it to the general temp_geometry_path:</span>
+                <span class="n">directory</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tpath</span><span class="p">,</span> <span class="n">file</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">,</span> <span class="n">file</span><span class="p">))</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Delete the temporary directory for memory reasons:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">tpath</span><span class="p">)</span>
+
+        <span class="c1"># Return filepath to json file:</span>
+        <span class="k">return</span> <span class="n">directory</span><span class="p">,</span> <span class="n">path</span>
+
+
 <div class="viewcode-block" id="PolyhedralSpace.calculate_input_parameters">
 <a class="viewcode-back" href="../../../mango.design_spaces.html#mango.design_spaces.polyhedral_design_space.PolyhedralSpace.calculate_input_parameters">[docs]</a>
     <span class="k">def</span> <span class="nf">calculate_input_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_lengths</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">routing_algorithm</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -478,7 +675,8 @@
             <span class="s1">&#39;volume&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_file</span><span class="o">.</span><span class="n">volume</span><span class="p">,</span>
             <span class="s1">&#39;convex_hull_volume&#39;</span><span class="p">:</span> <span class="n">convex_hull_volume</span><span class="p">,</span>
             <span class="s1">&#39;design_graph&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_graph</span><span class="p">,</span>
-            <span class="s1">&#39;bounding_box&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box</span>
+            <span class="s1">&#39;bounding_box&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounding_box</span><span class="p">,</span>
+            <span class="s1">&#39;PolyhedralSpace&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_values</span></div>

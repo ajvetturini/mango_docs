@@ -28,14 +28,12 @@ prevent DNA from being added to these areas (e.g., a nanoparticle)
 
     # Import the required packages:
     import numpy as np
-    from mango.design_spaces.bounding_box import CubicBox
-    from mango.mango_features.preserved_regions import PreservedEdge, PreservedVertex
-    from mango.mango_features.excluded_regions import Sphere
-    from mango.design_spaces.polyhedral_design_space import PolyhedralSpace
-    
+    from mango.design_spaces import PolyhedralSpace, CubicBox
+    from mango.features import PreservedEdge, PreservedVertex, Sphere
+
     # Define a box that is a constant 50 x 50 x 50 nm:
     new_box = CubicBox(a=50)
-        
+
     # Define preserved vertices at the mid-face of all 6 bounding box faces (units of nm)
     preserved_regions = [
             PreservedVertex(v1=np.array([25, 0, 25])),
@@ -45,13 +43,13 @@ prevent DNA from being added to these areas (e.g., a nanoparticle)
             PreservedEdge(v1=np.array([25., 35., 50]), v2=np.array([25., 15., 50])),
             PreservedEdge(v1=np.array([25., 35., 0.]), v2=np.array([25., 15., 0.])),
         ]
-    
+
     # We will prevent material from being added to a spherial region defined as below in units of nm.
     excluded_regions = [
                 Sphere(diameter=10, center=np.array([25, 40, 25])),
                 Sphere(diameter=10, center=np.array([25, 10, 25])),
             ]
-    
+
     # Lastly, we pass in these values as the required input to the Polyhedral Design Space:
     design_space = PolyhedralSpace(bounding_box=new_box, preserved=preserved_regions, excluded=excluded_regions)
 
@@ -76,7 +74,7 @@ simplistic example and has no physical meaning
     from copy import deepcopy
     
     # Import mango utilities:
-    from mango.utils.mango_math import xyz_from_graph, length_and_direction_between_nodes
+    from mango.utils.math import xyz_from_graph, length_and_direction_between_nodes
     
     # We start by defining a function which takes in two values: input_vars and extra_params 
     # The value of input_vars is essentially re-calculated every design iteration, and the design_graph
@@ -139,17 +137,17 @@ simplistic example and has no physical meaning
 .. code:: ipython3
 
     # Import design constraint features and assign:
-    from mango.optimization_features import design_constraints
+    from mango.optimizers import CustomDesignConstraint, PolyhedralDefaultConstraints
     
     # We define the custom constraint simple as:
-    custom_constraint = design_constraints.CustomDesignConstraint(name='Cutoff Distance Constraint',
-                                                                  design_constraint=edge_cutoff_constraint,
-                                                                  extra_params={'threshold': 4.0, # units nm
-                                                                                'd': 3.75})
+    custom_constraint = CustomDesignConstraint(name='Cutoff Distance Constraint',
+                                               design_constraint=edge_cutoff_constraint,
+                                               extra_params={'threshold': 4.0, # units nm
+                                                             'd': 3.75})
     # NOTE: edge_cutoff_constraint must be written as is, do not use edge_cutoff_constraint()
     
     # Now we set up the default constraints and re-assign the min face and edge length:
-    constraints = design_constraints.PolyhedralDefaultConstraints(
+    constraints = PolyhedralDefaultConstraints(
             min_face_angle=20,
             min_edge_length = 42,  # 42 basepairs for min length
             max_number_basepairs_in_scaffold=7249, 
@@ -169,7 +167,8 @@ taking the inverse of the maximizing function.
 
 .. code:: ipython3
 
-    from mango.optimization_features.objective_function import ObjectiveFunction
+    from mango.optimizers import ObjectiveFunction
+
     # Function to estimate the volume of a cylinder-representing-DNA
     def cylinder_volume(graph, dna_diameter):
         total_volume = 0.
@@ -211,7 +210,7 @@ to find a sweet spot of computation time and results analysis
 
 .. code:: ipython3
 
-    from mango.optimizers.single_objective_shape_annealing import ShapeAnneal
+    from mango.optimizers import ShapeAnneal
     from mango.grammars.origami_grammars import TriangulationGrammars
     
     opt = ShapeAnneal(

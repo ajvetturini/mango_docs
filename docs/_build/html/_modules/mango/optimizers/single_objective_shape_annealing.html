@@ -93,12 +93,13 @@
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">mango.design_spaces.polyhedral_design_space</span> <span class="kn">import</span> <span class="n">PolyhedralSpace</span>
 <span class="kn">from</span> <span class="nn">mango.grammars.origami_grammars</span> <span class="kn">import</span> <span class="n">GrammarSet</span><span class="p">,</span> <span class="n">CustomGrammarSet</span>
-<span class="kn">from</span> <span class="nn">mango.optimization_features</span> <span class="kn">import</span> <span class="n">design_constraints</span><span class="p">,</span> <span class="n">objective_function</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mango.optimizers</span> <span class="kn">import</span> <span class="n">design_constraints</span><span class="p">,</span> <span class="n">objective_function</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">randint</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">dill</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 
 <div class="viewcode-block" id="ShapeAnneal">
 <a class="viewcode-back" href="../../../mango.optimizers.html#mango.optimizers.single_objective_shape_annealing.ShapeAnneal">[docs]</a>
@@ -409,7 +410,7 @@
 
 <div class="viewcode-block" id="ShapeAnneal.initialize_temperature">
 <a class="viewcode-back" href="../../../mango.optimizers.html#mango.optimizers.single_objective_shape_annealing.ShapeAnneal.initialize_temperature">[docs]</a>
-    <span class="k">def</span> <span class="nf">initialize_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">initialize_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function performs a random walk through the objective space to automatically assign the temperature used</span>
 <span class="sd">        in the acceptance criterion for the first epoch.</span>
@@ -469,15 +470,18 @@
         <span class="c1"># After the while loop has ended, we set the value of temperature to the std. dev of the objectives tracked:</span>
         <span class="n">newTemp</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_walk_objective_values</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">numDecimals</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">newTemp</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find any variation in the objective function valuation for the&#39;</span>
-                            <span class="sa">f</span><span class="s1">&#39;specified function </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">. Please increase random_walk_steps or &#39;</span>
-                            <span class="sa">f</span><span class="s1">&#39;verify the objective function is evaluating properly!&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find any variation in the objective function valuation for the&#39;</span>
+                          <span class="sa">f</span><span class="s1">&#39;specified function </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">. Please increase random_walk_steps or &#39;</span>
+                          <span class="sa">f</span><span class="s1">&#39;verify the objective function is evaluating properly!&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">newTemp</span>  <span class="c1"># Assign the std. dev to the initial temperature value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">temperature_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># Store this initial value in the list</span>
         <span class="c1"># Return to the initial state to start the optimization process from</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_design_space</span><span class="p">(</span><span class="n">new_design_space</span><span class="o">=</span><span class="n">initial_design_to_return</span><span class="p">)</span>
         <span class="c1"># Store the initial design now that temperature is initialized:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store_design_for_animation</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_design_for_animation</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 
 
@@ -637,9 +641,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">initialize_time_tracker_dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">generate_start_shape</span><span class="p">()</span>
 
+        <span class="c1"># Create the initial files for the initial constraint check:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">use_precise_geometry</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">create_precise_files</span><span class="p">()</span>
+
         <span class="c1">### STEP 0: (added this later, oops) Validate that the generated start shape actually passed all design</span>
         <span class="c1"># constraints to ensure that the optimization process can begin. Here, we also intialize the design constraint</span>
         <span class="c1"># tracking for computational efficiency</span>
+        <span class="n">all_edge_lengths</span> <span class="o">=</span> <span class="n">calculate_design_edge_lengths</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">design_graph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">calculate_input_parameters</span><span class="p">(</span><span class="n">edge_lengths</span><span class="o">=</span><span class="n">all_edge_lengths</span><span class="p">,</span>
+                                                     <span class="n">routing_algorithm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">design_constraints</span><span class="o">.</span><span class="n">scaffold_routing_algorithm</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">design_constraints</span><span class="o">.</span><span class="n">create_constraint_dictionary</span><span class="p">(</span><span class="n">design_space</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="p">)</span>
         <span class="n">passed_all_constraints</span><span class="p">,</span> <span class="n">constraint_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_constraints</span><span class="o">.</span><span class="n">check_constraints</span><span class="p">(</span>
             <span class="n">design_space</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="p">,</span> <span class="n">constraint_set</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraint_set</span><span class="p">)</span>
@@ -652,7 +664,10 @@
         <span class="c1">#            design space w/ our grammars:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_progress</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Initializing temperatures for start state&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_temperature</span><span class="p">()</span>
+        <span class="n">passed_init_temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_temperature</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">passed_init_temps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_output</span><span class="p">()</span>
+            <span class="k">return</span>
 
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">curEpoch</span> <span class="o">=</span> <span class="mi">1</span>
@@ -708,8 +723,8 @@
                     <span class="k">break</span>
 
             <span class="c1"># After the for loop we check if successes is 0. If so then the equilibrium value is met and we end!</span>
-            <span class="c1"># Note: This is a bad convergence criterion with the use of a ramp element / in general imo</span>
-            <span class="c1">#       I&#39;d rather use the L1 or just for a # of epochs, this isn&#39;t inherently always true.</span>
+            <span class="c1"># Note: Imo, is a bad convergence criterion with the use of a ramp element / in general</span>
+            <span class="c1">#       I&#39;d rather use the L1 or just for a # of iterations, this isn&#39;t inherently always true.</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;if success == 0:</span>
 <span class="sd">                break&quot;&quot;&quot;</span>
 
@@ -768,7 +783,12 @@
                 <span class="n">dill</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">copy_of_data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="c1"># Check if the error is due to a specific type and skip over it</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error exporting file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error exporting file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Delete the temp files directory if in precise geometry mode:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">use_precise_geometry</span><span class="p">:</span>
+            <span class="n">full_save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_space</span><span class="o">.</span><span class="n">temp_geometry_path</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">full_save_path</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 </div>
 
 </pre></div>

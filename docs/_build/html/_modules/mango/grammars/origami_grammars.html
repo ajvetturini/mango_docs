@@ -85,11 +85,11 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">mango.design_spaces.polyhedral_design_space</span> <span class="kn">import</span> <span class="n">PolyhedralSpace</span>
 <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">choice</span><span class="p">,</span> <span class="n">seed</span>
-<span class="kn">from</span> <span class="nn">mango.utils.mango_math</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.mesh_face</span> <span class="kn">import</span> <span class="n">MeshFace</span>
+<span class="kn">from</span> <span class="nn">mango.utils.math</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mango.features.mesh_face</span> <span class="kn">import</span> <span class="n">MeshFace</span>
 <span class="kn">from</span> <span class="nn">mango.utils.DNA_property_constants</span> <span class="kn">import</span> <span class="n">BDNA</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial.transform</span> <span class="kn">import</span> <span class="n">Rotation</span>
-<span class="kn">from</span> <span class="nn">mango.mango_features.preserved_regions</span> <span class="kn">import</span> <span class="n">PreservedVertex</span><span class="p">,</span> <span class="n">PreservedEdge</span>
+<span class="kn">from</span> <span class="nn">mango.features.preserved_regions</span> <span class="kn">import</span> <span class="n">PreservedVertex</span><span class="p">,</span> <span class="n">PreservedEdge</span>
 
 <div class="viewcode-block" id="GrammarSet">
 <a class="viewcode-back" href="../../../mango.grammars.html#mango.grammars.origami_grammars.GrammarSet">[docs]</a>
@@ -214,7 +214,7 @@
         <span class="k">if</span> <span class="n">override</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">face_verts_to_divide</span> <span class="o">=</span> <span class="n">override</span>
         <span class="n">face_to_divide</span> <span class="o">=</span> <span class="n">design_space</span><span class="o">.</span><span class="n">all_faces</span><span class="p">[</span><span class="n">face_verts_to_divide</span><span class="p">]</span>
-        <span class="c1"># We divide the face using the method from the mesh_face.py file in mango_features:</span>
+        <span class="c1"># We divide the face using the method from the mesh_face.py file in features:</span>
         <span class="n">new_vertex</span><span class="p">,</span> <span class="n">new_triangle1</span><span class="p">,</span> <span class="n">new_triangle2</span><span class="p">,</span> <span class="n">divided_edge</span><span class="p">,</span> <span class="n">og_vertex</span> <span class="o">=</span> <span class="n">face_to_divide</span><span class="o">.</span><span class="n">divide_triangular_face</span><span class="p">()</span>
 
         <span class="c1"># Now, if the new vertex we created already exists in the graph, we will simply return False meaning that the</span>
@@ -692,28 +692,47 @@
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Which grammars we can call depends on the cell_type:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;triclinic&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_b&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_c&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;Rotate_alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;Rotate_beta&#39;</span><span class="p">,</span> <span class="s1">&#39;Rotate_gamma&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Vary_b&#39;, &#39;Vary_c&#39;, &#39;Rotate_alpha&#39;, &#39;Rotate_beta&#39;, &#39;Rotate_gamma&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">,</span> <span class="s1">&#39;Rotate Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;monoclinic&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_b&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_c&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;Rotate_beta&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Vary_b&#39;, &#39;Vary_c&#39;, &#39;Rotate_beta&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">,</span> <span class="s1">&#39;Rotate Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;orthorhombic&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_b&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_c&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Vary_b&#39;, &#39;Vary_c&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[]</span>
+
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;tetragonal&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_c&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Vary_c&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;rhombohedral&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;trigonal&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span>
-                                  <span class="s1">&#39;Rotate_alpha&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Rotate_alpha&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">,</span> <span class="s1">&#39;Rotate Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;hexagonal&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">,</span> <span class="s1">&#39;Vary_c&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;, &#39;Vary_c&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>  <span class="s1">&#39;c&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;isometric&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="s1">&#39;cubic&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary_a&#39;</span><span class="p">]</span>
+            <span class="c1">#self.grammar_names = [&#39;Vary_a&#39;]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vary Box&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Invalid parallelepiped volume calculation&#39;</span><span class="p">)</span>
 
@@ -730,7 +749,13 @@
 <a class="viewcode-back" href="../../../mango.grammars.html#mango.grammars.origami_grammars.ParallelepipedGrammars.pick_random_grammar">[docs]</a>
     <span class="k">def</span> <span class="nf">pick_random_grammar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Randomly selects a grammar with equal probabilty &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">)</span></div>
+        <span class="n">grammar_choice</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grammar_choice</span> <span class="o">==</span> <span class="s1">&#39;Vary Box&#39;</span><span class="p">:</span>
+            <span class="n">box_dir</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">grammar_choice</span> <span class="o">==</span> <span class="s1">&#39;Rotate Box&#39;</span><span class="p">:</span>
+            <span class="n">box_dir</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Invalid grammar choice.&#39;</span><span class="p">)</span></div>
 
 
 
@@ -748,13 +773,15 @@
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">grammar_rule</span><span class="p">,</span> <span class="n">geometry</span> <span class="o">=</span> <span class="n">grammar_selected</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">grammar_rule</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">grammar_selected</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">grammar_rule</span> <span class="o">==</span> <span class="s1">&#39;Vary&#39;</span><span class="p">:</span>
+            <span class="n">geometry</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_actions</span><span class="p">)</span>
             <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extend_or_shorten_edge</span><span class="p">(</span><span class="n">design_space</span><span class="o">=</span><span class="n">design_space</span><span class="p">,</span> <span class="n">extension_value</span><span class="o">=</span><span class="n">extension_value</span><span class="p">,</span>
                                                 <span class="n">param</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">grammar_rule</span> <span class="o">==</span> <span class="s1">&#39;Rotate&#39;</span><span class="p">:</span>
+            <span class="n">geometry</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">possible_rotations</span><span class="p">)</span>
             <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotate_edge</span><span class="p">(</span><span class="n">design_space</span><span class="o">=</span><span class="n">design_space</span><span class="p">,</span> <span class="n">rotation_value</span><span class="o">=</span><span class="n">rotation_value</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="n">geometry</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -939,10 +966,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grammar_sets</span><span class="p">:</span>
             <span class="c1"># We add all grammar names from all grammar sets as potential rules to pick</span>
-            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-                <span class="c1"># We also add this name to the grammar_map so we know which grammar functions to call:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">ParallelepipedGrammars</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                    <span class="c1"># We also add this name to the grammar_map so we know which grammar functions to call:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">TriangulationGrammars</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                    <span class="c1"># We also add this name to the grammar_map so we know which grammar functions to call:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
 
 <div class="viewcode-block" id="CustomGrammarSet.set_seed">
 <a class="viewcode-back" href="../../../mango.grammars.html#mango.grammars.origami_grammars.CustomGrammarSet.set_seed">[docs]</a>
@@ -956,7 +989,17 @@
 <a class="viewcode-back" href="../../../mango.grammars.html#mango.grammars.origami_grammars.CustomGrammarSet.pick_random_grammar">[docs]</a>
     <span class="k">def</span> <span class="nf">pick_random_grammar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="c1"># Simply select a random rule</span>
-        <span class="k">return</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">)</span></div>
+        <span class="n">grammar_choice</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grammar_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grammar_choice</span> <span class="ow">in</span> <span class="s1">&#39;Vary Box&#39;</span><span class="p">:</span>
+            <span class="n">gset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span><span class="p">[</span><span class="n">grammar_choice</span><span class="p">]</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">gset</span><span class="o">.</span><span class="n">possible_actions</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">grammar_choice</span>
+        <span class="k">elif</span> <span class="n">grammar_choice</span> <span class="o">==</span> <span class="s1">&#39;Rotate Box&#39;</span><span class="p">:</span>
+            <span class="n">gset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grammar_map</span><span class="p">[</span><span class="n">grammar_choice</span><span class="p">]</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">choice</span><span class="p">(</span><span class="n">gset</span><span class="o">.</span><span class="n">possible_rotations</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">grammar_choice</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">grammar_choice</span></div>
 
 
 
