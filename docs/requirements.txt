@@ -11,4 +11,4 @@ trimesh[easy]==4.1.0
 nbsphinx==0.9.4
 sphinx_rtd_theme==2.0.0
 pymeshfix==0.16.2
-mango @ git+https://github.com/ajvetturini/mango@main
+mango @ git+https://github.com/CMU-Integrated-Design-Innovation-Group/Mango@main
